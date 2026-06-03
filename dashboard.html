@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — Alerta Segura</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="dashboard.css" />
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+
+<div class="dash-layout" id="dashLayout">
+
+  <!-- ══ TOP BAR ══ -->
+  <header class="top-bar">
+    <a href="index.html" class="top-logo">
+      <div class="dot"></div>
+      Alerta<strong>Segura</strong>
+    </a>
+
+    <div class="top-user">
+      <div class="user-avatar" id="userAvatar">?</div>
+      <div class="user-info">
+        <div class="user-name"  id="userName">—</div>
+        <div class="user-district" id="userDistrict">—</div>
+      </div>
+    </div>
+
+    <div class="top-actions">
+      <!-- Dark mode toggle -->
+      <button class="icon-btn" id="darkToggle" title="Modo oscuro">
+        <svg id="sunIcon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ══ SIDEBAR ══ -->
+  <aside class="dash-sidebar">
+    <span class="nav-section-label">Principal</span>
+    <a class="nav-link active" href="#stats">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </a>
+    <a class="nav-link" href="#map">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+      Mapa
+    </a>
+    <a class="nav-link" href="#alertas">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      Reportar
+    </a>
+    <a class="nav-link" href="#historial">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      Historial
+    </a>
+    <a class="nav-link" href="#comentarios">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      Comentarios
+    </a>
+
+    <div class="sidebar-spacer"></div>
+
+    <span class="nav-section-label">Cuenta</span>
+    <button class="logout-btn" id="logoutBtn">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+      Cerrar sesión
+    </button>
+  </aside>
+
+  <!-- ══ MAIN ══ -->
+  <main class="dash-main">
+
+    <!-- Estadísticas -->
+    <div id="stats">
+      <div style="margin-bottom:16px">
+        <h1 style="font-size:1.4rem;color:var(--text);font-family:'Syne',sans-serif">Panel de Seguridad</h1>
+        <p style="color:var(--gray-500);font-size:.88rem;margin-top:4px">Resumen de actividad en tu distrito</p>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card red">
+          <div class="stat-icon">🚨</div>
+          <div class="stat-value" id="statTotal">0</div>
+          <div class="stat-name">Total alertas</div>
+        </div>
+        <div class="stat-card gold">
+          <div class="stat-icon">👜</div>
+          <div class="stat-value" id="statRobos">0</div>
+          <div class="stat-name">Robos</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-icon">⚠️</div>
+          <div class="stat-value" id="statAsaltos">0</div>
+          <div class="stat-name">Asaltos</div>
+        </div>
+        <div class="stat-card purple">
+          <div class="stat-icon">🏚️</div>
+          <div class="stat-value" id="statVandalismo">0</div>
+          <div class="stat-name">Vandalismo</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-icon">📅</div>
+          <div class="stat-value" id="statMes">0</div>
+          <div class="stat-name">Este mes</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mapa -->
+    <div class="section-card" id="map">
+      <div class="card-head">
+        <div>
+          <h2>🗺️ Mapa interactivo</h2>
+          <p>Incidentes reportados en tu zona</p>
+        </div>
+      </div>
+      <div class="map-search-wrap">
+        <input type="text" id="mapSearch" placeholder="Buscar calle, parque, colegio..." />
+        <button class="btn btn-primary" onclick="searchOnMap()" style="padding:10px 18px;font-size:.85rem">Buscar</button>
+      </div>
+      <div id="map"></div>
+    </div>
+
+    <!-- Formulario de alerta -->
+    <div class="section-card" id="alertas">
+      <div class="card-head">
+        <div>
+          <h2>🚨 Reportar incidente</h2>
+          <p>Ayuda a tu comunidad informando sobre lo que ves</p>
+        </div>
+        <div class="time-badge">
+          <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <strong id="currentTime">—</strong>
+        </div>
+      </div>
+
+      <form class="alert-form" id="alertForm" novalidate>
+        <div class="field">
+          <label for="zona">Zona / Dirección</label>
+          <input type="text" id="zona" name="zona" placeholder="Ej: Jr. Las Flores 420" required />
+        </div>
+
+        <div class="field">
+          <label for="tipoIncidente">Tipo de incidente</label>
+          <select id="tipoIncidente" name="tipoIncidente" required>
+            <option value="" disabled selected>Seleccionar tipo</option>
+            <option value="Robo">Robo</option>
+            <option value="Asalto">Asalto</option>
+            <option value="Vandalismo">Vandalismo</option>
+            <option value="Drogas">Drogas</option>
+            <option value="Acoso">Acoso</option>
+            <option value="Sospechoso">Persona sospechosa</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="riesgo">Nivel de riesgo</label>
+          <select id="riesgo" name="riesgo" required>
+            <option value="" disabled selected>Seleccionar nivel</option>
+            <option value="alta">🔴 Alto</option>
+            <option value="media">🟡 Medio</option>
+            <option value="baja">🟢 Bajo</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Hora (automática)</label>
+          <div class="time-badge" style="width:100%;justify-content:flex-start">
+            <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <strong id="autoTime">—</strong>
+          </div>
+        </div>
+
+        <div class="field full">
+          <label for="comentario">Comentario</label>
+          <textarea id="comentario" name="comentario" rows="3" placeholder="Describe lo que observaste..." required></textarea>
+        </div>
+
+        <div class="field full" style="display:flex;justify-content:flex-end">
+          <button type="submit" class="btn btn-primary">
+            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+            Enviar alerta
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Historial con filtros -->
+    <div class="section-card" id="historial">
+      <div class="card-head">
+        <div>
+          <h2>📋 Historial de alertas</h2>
+          <p>Incidentes registrados recientemente</p>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <button class="filter-btn active" data-filter="Todos">Todos</button>
+        <button class="filter-btn" data-filter="Robo">Robos</button>
+        <button class="filter-btn" data-filter="Asalto">Asaltos</button>
+        <button class="filter-btn" data-filter="Drogas">Drogas</button>
+        <button class="filter-btn" data-filter="Acoso">Acoso</button>
+        <button class="filter-btn" data-filter="Vandalismo">Vandalismo</button>
+      </div>
+
+      <div class="alert-list" id="alertList">
+        <!-- populated by JS -->
+      </div>
+    </div>
+
+    <!-- Comentarios ciudadanos -->
+    <div class="section-card" id="comentarios">
+      <div class="card-head">
+        <div>
+          <h2>💬 Comentarios ciudadanos</h2>
+          <p>Observaciones de vecinos de tu distrito</p>
+        </div>
+      </div>
+
+      <div class="comments-list" id="commentsList">
+        <!-- seeded by JS -->
+      </div>
+    </div>
+
+    <!-- Botón de emergencia -->
+    <div class="emergency-panel">
+      <div class="emerg-head">
+        <div class="pulse-dot"></div>
+        <h2>Números de emergencia</h2>
+      </div>
+      <div class="emerg-grid">
+        <a href="tel:105" class="emerg-btn">
+          <div class="emerg-icon">🚔</div>
+          <div class="emerg-info">
+            <div class="name">Policía Nacional</div>
+            <div class="number">105</div>
+          </div>
+        </a>
+        <a href="tel:106" class="emerg-btn">
+          <div class="emerg-icon">🚑</div>
+          <div class="emerg-info">
+            <div class="name">SAMU</div>
+            <div class="number">106</div>
+          </div>
+        </a>
+        <a href="tel:116" class="emerg-btn">
+          <div class="emerg-icon">🚒</div>
+          <div class="emerg-info">
+            <div class="name">Bomberos</div>
+            <div class="number">116</div>
+          </div>
+        </a>
+        <button class="emerg-btn" id="serenazgoBtn">
+          <div class="emerg-icon">🛡️</div>
+          <div class="emerg-info">
+            <div class="name">Serenazgo</div>
+            <div class="number" id="serenazgoNum">Local</div>
+          </div>
+        </button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/dashboard.js"></script>
+</body>
+</html>
