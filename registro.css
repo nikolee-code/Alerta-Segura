@@ -31,7 +31,7 @@
   position: absolute;
   bottom: -80px; left: -80px;
   width: 320px; height: 320px;
-  background: radial-gradient(circle, rgba(30,48,72,.8) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(232,25,44,.25) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -53,13 +53,13 @@
 
 .panel-content h2 {
   font-size: 2.2rem;
-  color: #fff;
+  color: #a55656;
   margin-bottom: 16px;
   line-height: 1.15;
 }
 
 .panel-content p {
-  color: rgba(255,255,255,.55);
+  color: rgba(192, 54, 54, 0.55);
   font-size: .95rem;
   line-height: 1.7;
   max-width: 340px;
