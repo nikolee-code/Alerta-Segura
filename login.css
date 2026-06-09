@@ -29,7 +29,7 @@
   top: 50%; left: 50%;
   transform: translate(-50%, -50%);
   width: 700px; height: 700px;
-  background: radial-gradient(circle, rgba(232,25,44,.15) 0%, transparent 65%);
+  background: radial-gradient(circle, rgba(255, 35, 57, 0.614) 0%, transparent 65%);
   pointer-events: none;
 }
 
@@ -40,7 +40,7 @@
   padding: 56px 52px;
   width: 100%;
   max-width: 460px;
-  box-shadow: 0 32px 80px rgba(0,0,0,.35);
+  box-shadow: 0 32px 80px rgba(232, 22, 22, 0.212);
   animation: fadeUp .5s ease;
 }
 
