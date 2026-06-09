@@ -1,3 +1,8 @@
+import { auth } from "./firebase.js";
+
+import {
+  createUserWithEmailAndPassword
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 // ── registro.js ──
 
 const form = document.getElementById('registerForm');
@@ -62,7 +67,7 @@ document.getElementById('celular').addEventListener('input', (e) => {
 });
 
 // ── Validación y submit ──
-form.addEventListener('submit', (e) => {
+form.addEventListener('submit', async (e) => {
   e.preventDefault();
 
   const nombres  = document.getElementById('nombres').value.trim();
@@ -100,19 +105,22 @@ form.addEventListener('submit', (e) => {
   if (!terminos) {
     return alert('Debes aceptar los términos de servicio.');
   }
+try {
 
-  // Guardar en localStorage
-  const users = JSON.parse(localStorage.getItem('alertasegura_users') || '[]');
+  await createUserWithEmailAndPassword(
+    auth,
+    correo,
+    password
+  );
 
-  const exists = users.find(u => u.correo === correo);
-  if (exists) {
-    return alert('Ya existe una cuenta con ese correo. Por favor, inicia sesión.');
+  successModal.classList.add('active');
+
+} catch (error) {
+
+  if (error.code === "auth/email-already-in-use") {
+    alert("Este correo ya está registrado.");
+  } else {
+    alert(error.message);
   }
 
-  const newUser = { nombres, apellidos, dni, celular, distrito, correo, password };
-  users.push(newUser);
-  localStorage.setItem('alertasegura_users', JSON.stringify(users));
-
-  // Mostrar modal de éxito
-  successModal.classList.add('active');
-});
+}

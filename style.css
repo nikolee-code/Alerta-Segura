@@ -200,6 +200,7 @@ textarea {
   color: var(--text-primary);
   transition: border-color .2s, box-shadow .2s, background .3s;
   outline: none;
+  appearance: none;
   -webkit-appearance: none;
 }
 
