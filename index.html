@@ -419,24 +419,25 @@
       </div>
     </div>
 
-    <div class="stats-bar">
-      <div class="stat-item">
-        <div class="stat-num">0+</div>
-        <div class="stat-label">Alertas reportadas</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-num">2</div>
-        <div class="stat-label">Distritos activos</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-num">0+</div>
-        <div class="stat-label">Vecinos registrados</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-num">0%</div>
-        <div class="stat-label">Tasa de respuesta</div>
-      </div>
-    </div>
+<div class="stats-bar">
+  <div class="stat-item">
+    <div class="stat-num" id="statAlertas">0+</div>
+    <div class="stat-label">Alertas reportadas</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">4</div>
+    <div class="stat-label">Distritos activos</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num" id="statVecinos">0+</div>
+    <div class="stat-label">Vecinos registrados</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">0%</div>
+    <div class="stat-label">Tasa de respuesta</div>
+  </div>
+</div>
+
   </section>
 
   <!-- ══ FEATURES ══ -->
@@ -536,6 +537,27 @@
     <p>© 2025 AlertaSegura — Plataforma de Seguridad Ciudadana, Perú.</p>
     <p>Desarrollado para proteger comunidades.</p>
   </footer>
+
+  <!-- ══ ESTADÍSTICAS EN VIVO DESDE FIREBASE ══ -->
+  <script type="module">
+  import { db } from "./firebase.js";
+  import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+  async function actualizarEstadisticas() {
+    try {
+      const snapshot = await getDocs(collection(db, "Usuarios"));
+
+      // Contar total de vecinos registrados
+      const totalVecinos = snapshot.size;
+      document.getElementById('statVecinos').textContent = totalVecinos + '+';
+
+    } catch (error) {
+      console.error("Error al cargar estadísticas:", error);
+    }
+  }
+
+  actualizarEstadisticas();
+</script>
 
 </body>
 </html>

@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-// Firebase config (EL TUYO)
 const firebaseConfig = {
   apiKey: "AIzaSyAyL6viwVPvMptX0WkARZHahU6eFxayzJo",
   authDomain: "loginapp-8d281.firebaseapp.com",
@@ -12,8 +12,12 @@ const firebaseConfig = {
   measurementId: "G-T98VZZWV1V"
 };
 
-// Inicializar Firebase
 const app = initializeApp(firebaseConfig);
 
-// 🔥 AUTH (esto es lo que usas en registro.js)
-export const auth = getAuth(app);
+// Authentication
+const auth = getAuth(app);
+
+// Firestore
+const db = getFirestore(app);
+
+export { auth, db };

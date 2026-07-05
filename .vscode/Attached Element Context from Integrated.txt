@@ -1,0 +1,39 @@
+Attached Element Context from Integrated Browser
+
+Element: span
+
+URL: file:///d%3A/recuperado/ZONA%20ALERTA/ZONA%20ALERTA/index.html
+
+HTML Path: section.hero > div.hero-body > div.hero-content > div.hero-eyebrow.animate-up > span
+
+Outer HTML:
+```html
+<span>Seguridad Ciudadana · Perú</span>
+```
+
+Dimensions:
+- top: 92px
+- left: 78px
+- width: 257px
+- height: 15px
+
+CSS:
+```css
+.hero-eyebrow span { font-family: 'Syne', sans-serif;
+      font-size: .82rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--red-soft);
+      font-weight: 600; }
+
+/* Resolved values */
+color: rgb(0, 0, 0);
+display: block;
+font-family: Syne, sans-serif;
+font-size: 13.12px;
+font-weight: 600;
+height: 15.2px;
+letter-spacing: 1.8368px;
+text-transform: uppercase;
+width: 257.2px;
+```

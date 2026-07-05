@@ -1,8 +1,14 @@
-import { auth } from "./firebase.js";
+import { auth, db } from "./firebase.js";
 
+console.log("registro.js cargado");
 import {
   createUserWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+import {
+  doc,
+  setDoc
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 // ── registro.js ──
 
 const form = document.getElementById('registerForm');
@@ -107,20 +113,58 @@ form.addEventListener('submit', async (e) => {
   }
 try {
 
-  await createUserWithEmailAndPassword(
+  // Crear usuario en Firebase Authentication
+  const userCredential = await createUserWithEmailAndPassword(
     auth,
     correo,
     password
   );
 
-  successModal.classList.add('active');
+  // Obtener el ID único del usuario
+  const uid = userCredential.user.uid;
+
+  // Guardar información en Firestore
+  await setDoc(doc(db, "Usuarios", uid), {
+    nombres: nombres,
+    apellidos: apellidos,
+    dni: dni,
+    celular: celular,
+    distrito: distrito,
+    correo: correo,
+    fechaRegistro: new Date()
+  });
+
+  // Mostrar mensaje de éxito
+  successModal.classList.add("active");
+
+  // Limpiar formulario
+  form.reset();
+  strengthFill.style.width = "0%";
+  strengthLabel.textContent = "";
 
 } catch (error) {
 
-  if (error.code === "auth/email-already-in-use") {
-    alert("Este correo ya está registrado.");
-  } else {
-    alert(error.message);
+  console.error(error);
+
+  switch (error.code) {
+
+    case "auth/email-already-in-use":
+      alert("Este correo ya está registrado.");
+      break;
+
+    case "auth/invalid-email":
+      alert("El correo electrónico no es válido.");
+      break;
+
+    case "auth/weak-password":
+      alert("La contraseña es demasiado débil.");
+      break;
+
+    default:
+      alert("Ocurrió un error al registrar al usuario.");
+      console.log(error);
   }
 
 }
+
+});
