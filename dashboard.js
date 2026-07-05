@@ -1,5 +1,15 @@
 // ── dashboard.js ──
 
+import { db } from "./firebase.js";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  orderBy,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
 // ═══════════════════════════════════════════
 // 1. SESIÓN
 // ═══════════════════════════════════════════
@@ -58,37 +68,45 @@ darkToggle.addEventListener('click', () => {
 });
 
 // ═══════════════════════════════════════════
-// 4. DATOS (localStorage)
+// 4. DATOS DESDE FIRESTORE
 // ═══════════════════════════════════════════
-const STORAGE_KEY = 'alertasegura_reports';
+const ALERTAS_COLLECTION = "Alertas";
 
-function getReports() {
-  return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+// Guarda un array en memoria con las alertas ya cargadas (para no repetir consultas)
+let reportsCache = [];
+
+async function fetchReports() {
+  try {
+    const q = query(collection(db, ALERTAS_COLLECTION), orderBy("fecha", "desc"));
+    const snapshot = await getDocs(q);
+    reportsCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return reportsCache;
+  } catch (error) {
+    console.error("Error al traer alertas de Firestore:", error);
+    return [];
+  }
 }
 
-function saveReports(reports) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(reports));
-}
-
-// Seed de ejemplo si no hay datos
-const seedData = [
-  { tipo: 'Robo',       zona: 'Av. Principal 320',    riesgo: 'alta',  comentario: 'Arrebato de celular a señora mayor.',    hora: '08:15', fecha: new Date().toISOString() },
-  { tipo: 'Asalto',     zona: 'Jr. Las Flores 420',   riesgo: 'alta',  comentario: 'Dos personas en moto amenazaron a peatones.', hora: '10:42', fecha: new Date().toISOString() },
-  { tipo: 'Vandalismo', zona: 'Parque Central',        riesgo: 'media', comentario: 'Paredes del parque pintadas con grafiti.',hora: '13:00', fecha: new Date().toISOString() },
-  { tipo: 'Drogas',     zona: 'Ca. Los Pinos s/n',     riesgo: 'media', comentario: 'Personas consumiendo sustancias.', hora: '15:30', fecha: new Date().toISOString() },
-  { tipo: 'Acoso',      zona: 'Paradero El Carmen',    riesgo: 'baja',  comentario: 'Acoso verbal a pasajeras.',        hora: '17:10', fecha: new Date().toISOString() },
-];
-
-if (getReports().length === 0) {
-  saveReports(seedData);
+async function addReport(newReport) {
+  try {
+    await addDoc(collection(db, ALERTAS_COLLECTION), {
+      ...newReport,
+      creadoPor: session.correo || session.nombres,
+      timestamp: serverTimestamp()
+    });
+    return true;
+  } catch (error) {
+    console.error("Error al guardar la alerta en Firestore:", error);
+    alert("No se pudo guardar la alerta. Intenta de nuevo.");
+    return false;
+  }
 }
 
 // ═══════════════════════════════════════════
 // 5. ESTADÍSTICAS
 // ═══════════════════════════════════════════
-function updateStats() {
-  const reports = getReports();
-  const now     = new Date();
+function updateStats(reports) {
+  const now = new Date();
 
   document.getElementById('statTotal').textContent    = reports.length;
   document.getElementById('statRobos').textContent    = reports.filter(r => r.tipo === 'Robo').length;
@@ -96,13 +114,12 @@ function updateStats() {
   document.getElementById('statVandalismo').textContent = reports.filter(r => r.tipo === 'Vandalismo').length;
 
   const mesActual = reports.filter(r => {
+    if (!r.fecha) return false;
     const d = new Date(r.fecha);
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   });
   document.getElementById('statMes').textContent = mesActual.length;
 }
-
-updateStats();
 
 // ═══════════════════════════════════════════
 // 6. MAPA LEAFLET
@@ -136,20 +153,20 @@ function createMarkerIcon(color) {
   });
 }
 
-// Posiciones ficticias cerca de Lima para los seeds
+// Posiciones ficticias cerca de Lima (mientras no guardemos coordenadas reales)
 const seedPositions = [
   [-12.0450, -77.0420], [-12.0470, -77.0450],
   [-12.0480, -77.0400], [-12.0430, -77.0460],
   [-12.0490, -77.0430],
 ];
 
-function renderMapMarkers() {
+function renderMapMarkers(reports) {
   // Limpiar marcadores anteriores (no el mapa base)
   mapInstance.eachLayer(layer => {
     if (layer instanceof L.Marker) mapInstance.removeLayer(layer);
   });
 
-  getReports().forEach((r, i) => {
+  reports.forEach((r, i) => {
     const pos   = seedPositions[i % seedPositions.length];
     const color = iconColors[r.tipo] || 'gray';
     L.marker(pos, { icon: createMarkerIcon(color) })
@@ -157,8 +174,6 @@ function renderMapMarkers() {
       .bindPopup(`<b>${r.tipo}</b><br>${r.zona}<br><small>${r.hora}</small>`);
   });
 }
-
-renderMapMarkers();
 
 // Búsqueda en mapa (Nominatim)
 window.searchOnMap = async function () {
@@ -186,7 +201,7 @@ window.searchOnMap = async function () {
 // ═══════════════════════════════════════════
 // 7. FORMULARIO DE ALERTA
 // ═══════════════════════════════════════════
-document.getElementById('alertForm').addEventListener('submit', (e) => {
+document.getElementById('alertForm').addEventListener('submit', async (e) => {
   e.preventDefault();
 
   const zona      = document.getElementById('zona').value.trim();
@@ -203,19 +218,23 @@ document.getElementById('alertForm').addEventListener('submit', (e) => {
   const fecha  = now.toISOString();
 
   const newReport = { tipo, zona, riesgo, comentario, hora, fecha };
-  const reports   = getReports();
-  reports.unshift(newReport);
-  saveReports(reports);
 
-  // Reset
-  e.target.reset();
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+  submitBtn.disabled = true;
 
-  // Actualizar UI
-  updateStats();
-  renderAlertList('Todos');
-  renderMapMarkers();
+  const success = await addReport(newReport);
 
-  alert(`✅ Alerta de "${tipo}" registrada correctamente a las ${hora}.`);
+  submitBtn.disabled = false;
+
+  if (success) {
+    // Reset del formulario
+    e.target.reset();
+
+    // Volver a cargar todo desde Firestore y refrescar la pantalla
+    await cargarYActualizarTodo();
+
+    alert(`✅ Alerta de "${tipo}" registrada correctamente a las ${hora}.`);
+  }
 });
 
 // ═══════════════════════════════════════════
@@ -223,8 +242,7 @@ document.getElementById('alertForm').addEventListener('submit', (e) => {
 // ═══════════════════════════════════════════
 const riskColors = { alta: '#E8192C', media: '#F5A623', baja: '#22C55E' };
 
-function renderAlertList(filter) {
-  const reports = getReports();
+function renderAlertList(reports, filter) {
   const filtered = filter === 'Todos' ? reports : reports.filter(r => r.tipo === filter);
   const container = document.getElementById('alertList');
 
@@ -248,19 +266,19 @@ function renderAlertList(filter) {
   `).join('');
 }
 
-renderAlertList('Todos');
-
 // Filtros
+let currentFilter = 'Todos';
 document.querySelectorAll('.filter-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    renderAlertList(btn.dataset.filter);
+    currentFilter = btn.dataset.filter;
+    renderAlertList(reportsCache, currentFilter);
   });
 });
 
 // ═══════════════════════════════════════════
-// 9. COMENTARIOS CIUDADANOS
+// 9. COMENTARIOS CIUDADANOS (se mantienen de ejemplo por ahora)
 // ═══════════════════════════════════════════
 const seedComments = [
   { autor: 'María Gómez',     texto: 'Se observó poca iluminación en el parque central. Es peligroso de noche.', tiempo: 'Hace 20 min' },
@@ -294,3 +312,15 @@ document.getElementById('logoutBtn').addEventListener('click', () => {
     window.location.href = 'login.html';
   }
 });
+
+// ═══════════════════════════════════════════
+// 11. CARGA INICIAL DE TODO
+// ═══════════════════════════════════════════
+async function cargarYActualizarTodo() {
+  const reports = await fetchReports();
+  updateStats(reports);
+  renderMapMarkers(reports);
+  renderAlertList(reports, currentFilter);
+}
+
+cargarYActualizarTodo();

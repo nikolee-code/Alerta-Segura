@@ -143,15 +143,16 @@
 
     /* ── STATS BAR ── */
     .stats-bar {
-      background: rgba(174, 63, 63, 0.79);
-      border-top: 1px solid rgba(255, 255, 255, 0.86);
-      backdrop-filter: blur(12px);
-      padding: 24px 60px;
-      display: flex;
-      gap: 48px;
-      position: relative;
-      z-index: 5;
-    }
+  background: rgba(174, 63, 63, 0.79);
+  border-top: 1px solid rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(12px);
+  padding: 24px 60px;
+  display: flex;
+  justify-content: center;
+  gap: 48px;
+  position: relative;
+  z-index: 5;
+}
 
     .stat-item { text-align: center; }
 
@@ -432,10 +433,6 @@
     <div class="stat-num" id="statVecinos">0+</div>
     <div class="stat-label">Vecinos registrados</div>
   </div>
-  <div class="stat-item">
-    <div class="stat-num">0%</div>
-    <div class="stat-label">Tasa de respuesta</div>
-  </div>
 </div>
 
   </section>
@@ -544,17 +541,21 @@
   import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
   async function actualizarEstadisticas() {
-    try {
-      const snapshot = await getDocs(collection(db, "Usuarios"));
+  try {
+    // Contar vecinos registrados
+    const usuariosSnapshot = await getDocs(collection(db, "Usuarios"));
+    const totalVecinos = usuariosSnapshot.size;
+    document.getElementById('statVecinos').textContent = totalVecinos + '+';
 
-      // Contar total de vecinos registrados
-      const totalVecinos = snapshot.size;
-      document.getElementById('statVecinos').textContent = totalVecinos + '+';
+    // Contar alertas reportadas
+    const alertasSnapshot = await getDocs(collection(db, "Alertas"));
+    const totalAlertas = alertasSnapshot.size;
+    document.getElementById('statAlertas').textContent = totalAlertas + '+';
 
-    } catch (error) {
-      console.error("Error al cargar estadísticas:", error);
-    }
+  } catch (error) {
+    console.error("Error al cargar estadísticas:", error);
   }
+}
 
   actualizarEstadisticas();
 </script>

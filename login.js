@@ -1,10 +1,15 @@
 // ── login.js ──
 
-import { auth } from "./firebase.js";
+import { auth, db } from "./firebase.js";
 
 import {
   signInWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+import {
+  doc,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 const form = document.getElementById("loginForm");
 const errorBanner = document.getElementById("errorBanner");
@@ -46,12 +51,38 @@ form.addEventListener("submit", async (e) => {
 
   try {
 
-    await signInWithEmailAndPassword(
+    // 1. Iniciar sesión en Firebase Authentication
+    const userCredential = await signInWithEmailAndPassword(
       auth,
       correo,
       password
     );
 
+    const uid = userCredential.user.uid;
+
+    // 2. Buscar los datos del usuario en Firestore (nombre, apellidos, distrito, etc.)
+    const userDocRef = doc(db, "Usuarios", uid);
+    const userDocSnap = await getDoc(userDocRef);
+
+    if (!userDocSnap.exists()) {
+      showError("No se encontraron los datos de tu cuenta. Contacta soporte.");
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = `Ingresar`;
+      return;
+    }
+
+    const datosUsuario = userDocSnap.data();
+
+    // 3. Guardar la sesión en el navegador para que el Dashboard pueda usarla
+    sessionStorage.setItem("alertasegura_session", JSON.stringify({
+      uid: uid,
+      nombres: datosUsuario.nombres,
+      apellidos: datosUsuario.apellidos,
+      distrito: datosUsuario.distrito,
+      correo: datosUsuario.correo
+    }));
+
+    // 4. Ahora sí, ir al Dashboard
     window.location.href = "dashboard.html";
 
   } catch (error) {
@@ -70,12 +101,10 @@ form.addEventListener("submit", async (e) => {
 
       default:
         showError(error.message);
+        console.error(error);
     }
 
-  } finally {
-
     submitBtn.disabled = false;
-
     submitBtn.innerHTML = `
       <svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
         <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
