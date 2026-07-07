@@ -207,14 +207,21 @@
         </div>
       </div>
 
-      <div class="filter-bar">
-        <button class="filter-btn active" data-filter="Todos">Todos</button>
-        <button class="filter-btn" data-filter="Robo">Robos</button>
-        <button class="filter-btn" data-filter="Asalto">Asaltos</button>
-        <button class="filter-btn" data-filter="Drogas">Drogas</button>
-        <button class="filter-btn" data-filter="Acoso">Acoso</button>
-        <button class="filter-btn" data-filter="Vandalismo">Vandalismo</button>
-      </div>
+      <div class="filter-bar" style="justify-content:space-between;align-items:center">
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button class="filter-btn active" data-filter="Todos">Todos</button>
+    <button class="filter-btn" data-filter="Robo">Robos</button>
+    <button class="filter-btn" data-filter="Asalto">Asaltos</button>
+    <button class="filter-btn" data-filter="Drogas">Drogas</button>
+    <button class="filter-btn" data-filter="Acoso">Acoso</button>
+    <button class="filter-btn" data-filter="Vandalismo">Vandalismo</button>
+  </div>
+  <select id="dateFilter" style="max-width:170px">
+    <option value="todos">Todas las fechas</option>
+    <option value="semana">Última semana</option>
+    <option value="mes">Último mes</option>
+  </select>
+</div>
 
       <div class="alert-list" id="alertList">
         <!-- populated by JS -->

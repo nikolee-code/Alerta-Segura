@@ -117,9 +117,30 @@ function updateStats(reports) {
 }
 
 // ═══════════════════════════════════════════
-// 6. MAPA LEAFLET
+// 6. MAPA LEAFLET (centrado en el distrito del usuario)
 // ═══════════════════════════════════════════
-const mapInstance = L.map('map').setView([-12.0464, -77.0428], 14);
+
+// Coordenadas conocidas por distrito. Si el distrito del usuario no está
+// en esta lista, el mapa usa el centro de Lima como respaldo.
+const districtCoords = {
+  'Chimbote':       [-9.0853, -78.5783],
+  'Nuevo Chimbote': [-9.1548, -78.5822],
+  'Coishco':        [-9.0122, -78.6321],
+  'Santa':          [-8.9769, -78.6172],
+  'Miraflores':     [-12.1200, -77.0300],
+  'San Isidro':     [-12.0970, -77.0350],
+  'Surco':          [-12.1350, -76.9930],
+  'La Molina':      [-12.0850, -76.9450],
+  'San Borja':      [-12.1080, -77.0000],
+  'Barranco':       [-12.1490, -77.0210],
+  'Magdalena':      [-12.0950, -77.0730],
+  'Jesús María':    [-12.0770, -77.0490],
+};
+
+const defaultCoords = [-12.0464, -77.0428]; // centro de Lima, respaldo general
+const startCoords = districtCoords[session.distrito] || defaultCoords;
+
+const mapInstance = L.map('map').setView(startCoords, 14);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '© OpenStreetMap contributors',
@@ -163,8 +184,8 @@ function renderMapMarkers(reports) {
   });
 
   reports.forEach((r) => {
-    const lat = r.lat ?? -12.0464;
-    const lng = r.lng ?? -77.0428;
+    const lat = r.lat ?? startCoords[0];
+    const lng = r.lng ?? startCoords[1];
     const color = iconColors[r.tipo] || 'gray';
     L.marker([lat, lng], { icon: createMarkerIcon(color) })
       .addTo(mapInstance)
@@ -177,7 +198,7 @@ window.searchOnMap = async function () {
   if (!q) return;
 
   try {
-    const res  = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q + ', Lima, Peru')}&limit=1`);
+    const res  = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q + ', Peru')}&limit=1`);
     const data = await res.json();
     if (data.length > 0) {
       const { lat, lon, display_name } = data[0];
@@ -238,9 +259,11 @@ mapInstance.on('click', async (e) => {
   placeSelectionMarker(lat, lng);
 
   const zonaInput = document.getElementById('zona');
+  const searchInput = document.getElementById('mapSearch');
   zonaInput.placeholder = "Buscando dirección...";
   const direccion = await reverseGeocode(lat, lng);
   zonaInput.value = direccion;
+  searchInput.value = direccion;
 });
 
 document.getElementById('useMyLocationBtn').addEventListener('click', () => {
@@ -254,21 +277,23 @@ document.getElementById('useMyLocationBtn').addEventListener('click', () => {
   btn.textContent = "📍 Buscando tu ubicación...";
 
   navigator.geolocation.getCurrentPosition(
-    async (position) => {
-      const lat = position.coords.latitude;
-      const lng = position.coords.longitude;
+  async (position) => {
+    const lat = position.coords.latitude;
+    const lng = position.coords.longitude;
 
-      mapInstance.setView([lat, lng], 16);
-      placeSelectionMarker(lat, lng);
+    mapInstance.setView([lat, lng], 16);
+    placeSelectionMarker(lat, lng);
 
-      const zonaInput = document.getElementById('zona');
-      zonaInput.placeholder = "Buscando dirección...";
-      const direccion = await reverseGeocode(lat, lng);
-      zonaInput.value = direccion;
+    const zonaInput = document.getElementById('zona');
+    const searchInput = document.getElementById('mapSearch');
+    zonaInput.placeholder = "Buscando dirección...";
+    const direccion = await reverseGeocode(lat, lng);
+    zonaInput.value = direccion;
+    searchInput.value = direccion;
 
-      btn.disabled = false;
-      btn.textContent = "📍 Usar mi ubicación actual";
-    },
+    btn.disabled = false;
+    btn.textContent = "📍 Usar mi ubicación actual";
+  },
     () => {
       alert("No se pudo obtener tu ubicación. Verifica los permisos de tu navegador.");
       btn.disabled = false;
@@ -330,16 +355,29 @@ document.getElementById('alertForm').addEventListener('submit', async (e) => {
 });
 
 // ═══════════════════════════════════════════
-// 8. LISTA DE ALERTAS CON FILTROS
+// 8. LISTA DE ALERTAS CON FILTROS (tipo + fecha)
 // ═══════════════════════════════════════════
 const riskColors = { alta: '#E8192C', media: '#F5A623', baja: '#22C55E' };
 
-function renderAlertList(reports, filter) {
-  const filtered = filter === 'Todos' ? reports : reports.filter(r => r.tipo === filter);
+// Filtra un array de reportes según el rango de fecha elegido
+function filterByDate(reports, dateFilter) {
+  if (dateFilter === 'todos') return reports;
+
+  const cutoff = new Date();
+  if (dateFilter === 'semana') cutoff.setDate(cutoff.getDate() - 7);
+  if (dateFilter === 'mes')    cutoff.setMonth(cutoff.getMonth() - 1);
+
+  return reports.filter(r => r.fecha && new Date(r.fecha) >= cutoff);
+}
+
+function renderAlertList(reports, tipoFilter, dateFilter) {
+  let filtered = tipoFilter === 'Todos' ? reports : reports.filter(r => r.tipo === tipoFilter);
+  filtered = filterByDate(filtered, dateFilter);
+
   const container = document.getElementById('alertList');
 
   if (filtered.length === 0) {
-    container.innerHTML = `<p style="color:var(--gray-500);font-size:.88rem;padding:16px 0;">No hay alertas de este tipo.</p>`;
+    container.innerHTML = `<p style="color:var(--gray-500);font-size:.88rem;padding:16px 0;">No hay alertas para este filtro.</p>`;
     return;
   }
 
@@ -348,7 +386,7 @@ function renderAlertList(reports, filter) {
       <div class="alert-dot" style="background:${riskColors[r.riesgo]}"></div>
       <div class="alert-info">
         <div class="alert-type">${r.tipo}</div>
-        <div class="alert-meta">${r.zona} · ${r.comentario.slice(0, 60)}${r.comentario.length > 60 ? '…' : ''}</div>
+       <div class="alert-meta">${r.zona || 'Sin zona'} · ${(r.comentario || '').slice(0, 60)}${(r.comentario || '').length > 60 ? '…' : ''}</div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;min-width:80px">
         <span class="risk-pill risk-${r.riesgo}">${r.riesgo}</span>
@@ -359,13 +397,20 @@ function renderAlertList(reports, filter) {
 }
 
 let currentFilter = 'Todos';
+let currentDateFilter = 'todos';
+
 document.querySelectorAll('.filter-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     currentFilter = btn.dataset.filter;
-    renderAlertList(reportsCache, currentFilter);
+    renderAlertList(reportsCache, currentFilter, currentDateFilter);
   });
+});
+
+document.getElementById('dateFilter').addEventListener('change', (e) => {
+  currentDateFilter = e.target.value;
+  renderAlertList(reportsCache, currentFilter, currentDateFilter);
 });
 
 // ═══════════════════════════════════════════
@@ -473,7 +518,7 @@ async function cargarYActualizarTodo() {
   const reports = await fetchReports();
   updateStats(reports);
   renderMapMarkers(reports);
-  renderAlertList(reports, currentFilter);
+  renderAlertList(reports, currentFilter, currentDateFilter);
 
   const comments = await fetchComments();
   renderComments(comments);
