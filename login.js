@@ -3,7 +3,8 @@
 import { auth, db } from "./firebase.js";
 
 import {
-  signInWithEmailAndPassword
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
 import {
@@ -17,6 +18,8 @@ const errorMsg = document.getElementById("errorMsg");
 const submitBtn = document.getElementById("submitBtn");
 const eyeBtn = document.getElementById("eyeBtn");
 const passwordInput = document.getElementById("password");
+const correoInput = document.getElementById("correo");
+const forgotLink = document.getElementById("forgotPasswordLink");
 
 // Mostrar/Ocultar contraseña
 eyeBtn.addEventListener("click", () => {
@@ -26,6 +29,17 @@ eyeBtn.addEventListener("click", () => {
 
 function showError(msg) {
   errorMsg.textContent = msg;
+  errorBanner.style.background = "rgba(232,25,44,.08)";
+  errorBanner.style.borderColor = "rgba(232,25,44,.25)";
+  errorBanner.style.color = "var(--red)";
+  errorBanner.classList.add("show");
+}
+
+function showSuccess(msg) {
+  errorMsg.textContent = msg;
+  errorBanner.style.background = "rgba(34,197,94,.08)";
+  errorBanner.style.borderColor = "rgba(34,197,94,.3)";
+  errorBanner.style.color = "#15803d";
   errorBanner.classList.add("show");
 }
 
@@ -33,12 +47,52 @@ function hideError() {
   errorBanner.classList.remove("show");
 }
 
+// ═══════════════════════════════════════════
+// RECUPERAR CONTRASEÑA
+// ═══════════════════════════════════════════
+forgotLink.addEventListener("click", async (e) => {
+  e.preventDefault();
+  hideError();
+
+  const correo = correoInput.value.trim();
+
+  if (!correo) {
+    showError("Primero escribe tu correo en el campo de arriba, luego haz click en este enlace.");
+    correoInput.focus();
+    return;
+  }
+
+  forgotLink.textContent = "Enviando...";
+
+  try {
+    await sendPasswordResetEmail(auth, correo);
+    showSuccess(`Te enviamos un correo a ${correo} con instrucciones para restablecer tu contraseña.`);
+  } catch (error) {
+    switch (error.code) {
+      case "auth/invalid-email":
+        showError("Ese correo no es válido.");
+        break;
+      case "auth/user-not-found":
+        showError("No encontramos una cuenta con ese correo.");
+        break;
+      default:
+        showError("No se pudo enviar el correo. Intenta de nuevo.");
+        console.error(error);
+    }
+  }
+
+  forgotLink.textContent = "¿Olvidaste tu contraseña?";
+});
+
+// ═══════════════════════════════════════════
+// INICIAR SESIÓN
+// ═══════════════════════════════════════════
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   hideError();
 
-  const correo = document.getElementById("correo").value.trim();
+  const correo = correoInput.value.trim();
   const password = passwordInput.value;
 
   if (!correo || !password) {
@@ -51,7 +105,6 @@ form.addEventListener("submit", async (e) => {
 
   try {
 
-    // 1. Iniciar sesión en Firebase Authentication
     const userCredential = await signInWithEmailAndPassword(
       auth,
       correo,
@@ -60,7 +113,6 @@ form.addEventListener("submit", async (e) => {
 
     const uid = userCredential.user.uid;
 
-    // 2. Buscar los datos del usuario en Firestore (nombre, apellidos, distrito, etc.)
     const userDocRef = doc(db, "Usuarios", uid);
     const userDocSnap = await getDoc(userDocRef);
 
@@ -73,7 +125,6 @@ form.addEventListener("submit", async (e) => {
 
     const datosUsuario = userDocSnap.data();
 
-    // 3. Guardar la sesión en el navegador para que el Dashboard pueda usarla
     sessionStorage.setItem("alertasegura_session", JSON.stringify({
       uid: uid,
       nombres: datosUsuario.nombres,
@@ -82,7 +133,6 @@ form.addEventListener("submit", async (e) => {
       correo: datosUsuario.correo
     }));
 
-    // 4. Ahora sí, ir al Dashboard
     window.location.href = "dashboard.html";
 
   } catch (error) {

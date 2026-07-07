@@ -24,6 +24,12 @@ document.getElementById('userDistrict').textContent = session.distrito;
 document.getElementById('userAvatar').textContent  = session.nombres.charAt(0).toUpperCase();
 
 const serenazgoNums = {
+  // Distritos reales de tu formulario de registro
+  'Chimbote':       '043-353425',
+  'Nuevo Chimbote': '043-313000',
+  'Coishco':        'Consultar municipio',
+  'Santa':          'Consultar municipio',
+  // Distritos de Lima (por si acaso, quedan como respaldo)
   'Miraflores':  '617-7575',  'San Isidro':  '264-4848',
   'Surco':       '448-0400',  'La Molina':   '349-1111',
   'San Borja':   '475-5070',  'Barranco':    '247-5000',
