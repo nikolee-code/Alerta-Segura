@@ -45,7 +45,7 @@
       <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
       Dashboard
     </a>
-    <a class="nav-link" href="#map">
+    <a class="nav-link" href="#mapCard">
       <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
       Mapa
     </a>
@@ -111,7 +111,7 @@
     </div>
 
     <!-- Mapa -->
-    <div class="section-card" id="map">
+    <div class="section-card" id="mapCard">
       <div class="card-head">
         <div>
           <h2>🗺️ Mapa interactivo</h2>
@@ -139,9 +139,17 @@
       </div>
 
       <form class="alert-form" id="alertForm" novalidate>
-        <div class="field">
+        <div class="field full">
           <label for="zona">Zona / Dirección</label>
-          <input type="text" id="zona" name="zona" placeholder="Ej: Jr. Las Flores 420" required />
+          <input type="text" id="zona" name="zona" placeholder="Ej: Jr. Las Flores 420, o selecciona en el mapa" required />
+          <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
+            <button type="button" class="btn btn-secondary btn-sm" id="useMyLocationBtn">
+              📍 Usar mi ubicación actual
+            </button>
+            <span style="font-size:.78rem;color:var(--gray-500)" id="locationHint">
+              O haz click en el mapa de arriba ⬆️ para marcar el lugar exacto
+            </span>
+          </div>
         </div>
 
         <div class="field">
@@ -222,8 +230,15 @@
         </div>
       </div>
 
+      <div style="padding:0 24px 20px;display:flex;gap:10px;align-items:flex-start">
+        <textarea id="newCommentText" rows="2" placeholder="Comparte una observación con tu comunidad..." style="flex:1;resize:vertical"></textarea>
+        <button class="btn btn-primary" id="submitCommentBtn" style="white-space:nowrap">
+          Publicar
+        </button>
+      </div>
+
       <div class="comments-list" id="commentsList">
-        <!-- seeded by JS -->
+        <!-- se llena con datos reales de Firestore -->
       </div>
     </div>
 

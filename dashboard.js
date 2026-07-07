@@ -16,16 +16,13 @@ import {
 const session = JSON.parse(sessionStorage.getItem('alertasegura_session') || 'null');
 
 if (!session) {
-  // No hay sesión → redirigir al login
   window.location.href = 'login.html';
 }
 
-// Mostrar info del usuario
 document.getElementById('userName').textContent   = `${session.nombres} ${session.apellidos}`;
 document.getElementById('userDistrict').textContent = session.distrito;
 document.getElementById('userAvatar').textContent  = session.nombres.charAt(0).toUpperCase();
 
-// Serenazgo por distrito (números ilustrativos)
 const serenazgoNums = {
   'Miraflores':  '617-7575',  'San Isidro':  '264-4848',
   'Surco':       '448-0400',  'La Molina':   '349-1111',
@@ -68,11 +65,9 @@ darkToggle.addEventListener('click', () => {
 });
 
 // ═══════════════════════════════════════════
-// 4. DATOS DESDE FIRESTORE
+// 4. ALERTAS DESDE FIRESTORE
 // ═══════════════════════════════════════════
 const ALERTAS_COLLECTION = "Alertas";
-
-// Guarda un array en memoria con las alertas ya cargadas (para no repetir consultas)
 let reportsCache = [];
 
 async function fetchReports() {
@@ -124,7 +119,6 @@ function updateStats(reports) {
 // ═══════════════════════════════════════════
 // 6. MAPA LEAFLET
 // ═══════════════════════════════════════════
-// Coordenadas por defecto: Lima, Perú
 const mapInstance = L.map('map').setView([-12.0464, -77.0428], 14);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -132,7 +126,15 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
 }).addTo(mapInstance);
 
-// Íconos según tipo
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    mapInstance.invalidateSize();
+  }, 200);
+});
+window.addEventListener('resize', () => {
+  mapInstance.invalidateSize();
+});
+
 const iconColors = {
   Robo:       'red',    Asalto:   'red',
   Vandalismo: 'orange', Drogas:   'purple',
@@ -153,29 +155,23 @@ function createMarkerIcon(color) {
   });
 }
 
-// Posiciones ficticias cerca de Lima (mientras no guardemos coordenadas reales)
-const seedPositions = [
-  [-12.0450, -77.0420], [-12.0470, -77.0450],
-  [-12.0480, -77.0400], [-12.0430, -77.0460],
-  [-12.0490, -77.0430],
-];
-
 function renderMapMarkers(reports) {
-  // Limpiar marcadores anteriores (no el mapa base)
   mapInstance.eachLayer(layer => {
-    if (layer instanceof L.Marker) mapInstance.removeLayer(layer);
+    if (layer instanceof L.Marker && !layer._isSelectionMarker) {
+      mapInstance.removeLayer(layer);
+    }
   });
 
-  reports.forEach((r, i) => {
-    const pos   = seedPositions[i % seedPositions.length];
+  reports.forEach((r) => {
+    const lat = r.lat ?? -12.0464;
+    const lng = r.lng ?? -77.0428;
     const color = iconColors[r.tipo] || 'gray';
-    L.marker(pos, { icon: createMarkerIcon(color) })
+    L.marker([lat, lng], { icon: createMarkerIcon(color) })
       .addTo(mapInstance)
       .bindPopup(`<b>${r.tipo}</b><br>${r.zona}<br><small>${r.hora}</small>`);
   });
 }
 
-// Búsqueda en mapa (Nominatim)
 window.searchOnMap = async function () {
   const q = document.getElementById('mapSearch').value.trim();
   if (!q) return;
@@ -199,6 +195,89 @@ window.searchOnMap = async function () {
 };
 
 // ═══════════════════════════════════════════
+// 6.1 SELECCIÓN DE UBICACIÓN EN EL MAPA (para el formulario)
+// ═══════════════════════════════════════════
+let selectedCoords = null;
+let selectionMarker = null;
+
+const selectionIcon = L.divIcon({
+  className: '',
+  html: `<div style="
+    width:30px;height:30px;border-radius:50% 50% 50% 0;
+    background:#3D7EAA;border:3px solid #fff;
+    box-shadow:0 3px 10px rgba(0,0,0,.4);
+    transform:rotate(-45deg)">
+  </div>`,
+  iconSize: [30, 30],
+  iconAnchor: [15, 30],
+});
+
+function placeSelectionMarker(lat, lng) {
+  if (selectionMarker) {
+    selectionMarker.setLatLng([lat, lng]);
+  } else {
+    selectionMarker = L.marker([lat, lng], { icon: selectionIcon }).addTo(mapInstance);
+    selectionMarker._isSelectionMarker = true;
+  }
+  selectionMarker.bindPopup("📍 Ubicación de tu reporte").openPopup();
+  selectedCoords = { lat, lng };
+}
+
+async function reverseGeocode(lat, lng) {
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+    const data = await res.json();
+    return data.display_name || `Lat: ${lat.toFixed(5)}, Lng: ${lng.toFixed(5)}`;
+  } catch {
+    return `Lat: ${lat.toFixed(5)}, Lng: ${lng.toFixed(5)}`;
+  }
+}
+
+mapInstance.on('click', async (e) => {
+  const { lat, lng } = e.latlng;
+  placeSelectionMarker(lat, lng);
+
+  const zonaInput = document.getElementById('zona');
+  zonaInput.placeholder = "Buscando dirección...";
+  const direccion = await reverseGeocode(lat, lng);
+  zonaInput.value = direccion;
+});
+
+document.getElementById('useMyLocationBtn').addEventListener('click', () => {
+  if (!navigator.geolocation) {
+    alert("Tu navegador no soporta geolocalización.");
+    return;
+  }
+
+  const btn = document.getElementById('useMyLocationBtn');
+  btn.disabled = true;
+  btn.textContent = "📍 Buscando tu ubicación...";
+
+  navigator.geolocation.getCurrentPosition(
+    async (position) => {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+
+      mapInstance.setView([lat, lng], 16);
+      placeSelectionMarker(lat, lng);
+
+      const zonaInput = document.getElementById('zona');
+      zonaInput.placeholder = "Buscando dirección...";
+      const direccion = await reverseGeocode(lat, lng);
+      zonaInput.value = direccion;
+
+      btn.disabled = false;
+      btn.textContent = "📍 Usar mi ubicación actual";
+    },
+    () => {
+      alert("No se pudo obtener tu ubicación. Verifica los permisos de tu navegador.");
+      btn.disabled = false;
+      btn.textContent = "📍 Usar mi ubicación actual";
+    }
+  );
+});
+
+// ═══════════════════════════════════════════
 // 7. FORMULARIO DE ALERTA
 // ═══════════════════════════════════════════
 document.getElementById('alertForm').addEventListener('submit', async (e) => {
@@ -213,11 +292,19 @@ document.getElementById('alertForm').addEventListener('submit', async (e) => {
     return alert('Por favor, completa todos los campos del formulario.');
   }
 
+  if (!selectedCoords) {
+    return alert('Por favor, marca la ubicación exacta en el mapa (haz click en el mapa o usa tu ubicación actual).');
+  }
+
   const now    = new Date();
   const hora   = now.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
   const fecha  = now.toISOString();
 
-  const newReport = { tipo, zona, riesgo, comentario, hora, fecha };
+  const newReport = {
+    tipo, zona, riesgo, comentario, hora, fecha,
+    lat: selectedCoords.lat,
+    lng: selectedCoords.lng
+  };
 
   const submitBtn = e.target.querySelector('button[type="submit"]');
   submitBtn.disabled = true;
@@ -227,10 +314,15 @@ document.getElementById('alertForm').addEventListener('submit', async (e) => {
   submitBtn.disabled = false;
 
   if (success) {
-    // Reset del formulario
     e.target.reset();
 
-    // Volver a cargar todo desde Firestore y refrescar la pantalla
+    if (selectionMarker) {
+      mapInstance.removeLayer(selectionMarker);
+      selectionMarker = null;
+    }
+    selectedCoords = null;
+    document.getElementById('zona').placeholder = "Ej: Jr. Las Flores 420, o selecciona en el mapa";
+
     await cargarYActualizarTodo();
 
     alert(`✅ Alerta de "${tipo}" registrada correctamente a las ${hora}.`);
@@ -266,7 +358,6 @@ function renderAlertList(reports, filter) {
   `).join('');
 }
 
-// Filtros
 let currentFilter = 'Todos';
 document.querySelectorAll('.filter-btn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -278,30 +369,92 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
 });
 
 // ═══════════════════════════════════════════
-// 9. COMENTARIOS CIUDADANOS (se mantienen de ejemplo por ahora)
+// 9. COMENTARIOS CIUDADANOS (reales, desde Firestore)
 // ═══════════════════════════════════════════
-const seedComments = [
-  { autor: 'María Gómez',     texto: 'Se observó poca iluminación en el parque central. Es peligroso de noche.', tiempo: 'Hace 20 min' },
-  { autor: 'Carlos Ruiz',     texto: 'Hubo presencia de personas sospechosas rondando el mercado.', tiempo: 'Hace 1 hora' },
-  { autor: 'Ana Delgado',     texto: 'El serenazgo respondió rápido cuando reporté el incidente. Buen trabajo.', tiempo: 'Hace 2 horas' },
-  { autor: 'Jorge Mendoza',   texto: 'Recomiendo activar cámaras en la esquina de Jr. Lima con Av. Grau.', tiempo: 'Hace 3 horas' },
-];
+const COMENTARIOS_COLLECTION = "Comentarios";
 
-function renderComments() {
+async function fetchComments() {
+  try {
+    const q = query(collection(db, COMENTARIOS_COLLECTION), orderBy("timestamp", "desc"));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  } catch (error) {
+    console.error("Error al traer comentarios:", error);
+    return [];
+  }
+}
+
+async function addComment(texto) {
+  await addDoc(collection(db, COMENTARIOS_COLLECTION), {
+    autor: `${session.nombres} ${session.apellidos}`,
+    texto: texto,
+    creadoPor: session.correo || session.nombres,
+    timestamp: serverTimestamp()
+  });
+}
+
+function timeAgo(timestamp) {
+  if (!timestamp || !timestamp.toDate) return "Justo ahora";
+  const date = timestamp.toDate();
+  const diffMs  = Date.now() - date.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+
+  if (diffMin < 1)  return "Justo ahora";
+  if (diffMin < 60) return `Hace ${diffMin} min`;
+
+  const diffHrs = Math.floor(diffMin / 60);
+  if (diffHrs < 24) return `Hace ${diffHrs} ${diffHrs === 1 ? 'hora' : 'horas'}`;
+
+  const diffDias = Math.floor(diffHrs / 24);
+  return `Hace ${diffDias} ${diffDias === 1 ? 'día' : 'días'}`;
+}
+
+function renderComments(comments) {
   const container = document.getElementById('commentsList');
-  container.innerHTML = seedComments.map(c => `
+
+  if (comments.length === 0) {
+    container.innerHTML = `<p style="color:var(--gray-500);font-size:.88rem;padding:16px 0;">Aún no hay comentarios. ¡Sé el primero en compartir algo con tu comunidad!</p>`;
+    return;
+  }
+
+  container.innerHTML = comments.map(c => `
     <div class="comment-item">
       <div class="comment-header">
         <div class="comment-avatar">${c.autor.charAt(0)}</div>
         <span class="comment-author">${c.autor}</span>
-        <span class="comment-time">${c.tiempo}</span>
+        <span class="comment-time">${timeAgo(c.timestamp)}</span>
       </div>
       <p class="comment-text">${c.texto}</p>
     </div>
   `).join('');
 }
 
-renderComments();
+document.getElementById('submitCommentBtn').addEventListener('click', async () => {
+  const textarea = document.getElementById('newCommentText');
+  const texto = textarea.value.trim();
+
+  if (!texto) {
+    alert('Escribe algo antes de publicar.');
+    return;
+  }
+
+  const btn = document.getElementById('submitCommentBtn');
+  btn.disabled = true;
+  btn.textContent = "Publicando...";
+
+  try {
+    await addComment(texto);
+    textarea.value = '';
+    const comments = await fetchComments();
+    renderComments(comments);
+  } catch (error) {
+    console.error(error);
+    alert('No se pudo publicar el comentario. Intenta de nuevo.');
+  }
+
+  btn.disabled = false;
+  btn.textContent = "Publicar";
+});
 
 // ═══════════════════════════════════════════
 // 10. CERRAR SESIÓN
@@ -321,6 +474,9 @@ async function cargarYActualizarTodo() {
   updateStats(reports);
   renderMapMarkers(reports);
   renderAlertList(reports, currentFilter);
+
+  const comments = await fetchComments();
+  renderComments(comments);
 }
 
 cargarYActualizarTodo();
