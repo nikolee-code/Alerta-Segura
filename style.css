@@ -20,6 +20,11 @@
   --accent-light: #EBF4FB;
   --accent-dark:  #2D6089;
 
+  /* Brand — Alerta Segura (rojo/navy) */
+  --navy:      #0D1B2A;
+  --red:       #B13333;
+  --red-soft:  rgba(177, 51, 51, .6);
+
   /* Semantic */
   --danger:       #D9534F;
   --danger-light: #FDF1F1;

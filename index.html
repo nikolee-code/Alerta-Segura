@@ -4,12 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Alerta Segura — Seguridad Ciudadana</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="style.css" />
   <style>
     /* ── HERO ── */
     .hero {
       min-height: 100vh;
-      background: var(--navy);
+      background: #ffffff;
       position: relative;
       overflow: hidden;
       display: flex;
@@ -51,13 +51,13 @@
     }
 
     .nav-logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-family: 'Syne', sans-serif;
-      font-weight: 800;
-      font-size: 1.25rem;
-      color: #770909;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 1.8rem;
+  color: #770909;
     }
 
     .nav-logo .dot {
@@ -105,7 +105,7 @@
 
     .hero-eyebrow span {
       font-family: 'Syne', sans-serif;
-      font-size: .82rem;
+      font-size: .70rem;
       letter-spacing: .14em;
       text-transform: uppercase;
       color: var(--red-soft);
@@ -265,7 +265,7 @@
 
     /* ── BENEFITS ── */
     .benefits {
-      background: var(--navy);
+      background: #f0f0f0;
       padding: 100px 60px;
       position: relative;
       overflow: hidden;
@@ -353,16 +353,16 @@
 
     /* ── FOOTER ── */
     footer {
-      background: var(--navy);
-      padding: 28px 60px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
+  background: #f0f0f0;
+  padding: 28px 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
 
-    footer p { color: rgba(149, 9, 9, 0.425); font-size: .82rem; }
+footer p { color: #6b6b6b; font-size: .82rem; }
 
     /* ── RESPONSIVE ── */
     @media (max-width: 768px) {
@@ -380,11 +380,11 @@
   <section class="hero">
     <nav class="nav">
       <div class="nav-logo">
-        <div class="dot"></div>
-        <span>Alerta<strong>Segura</strong></span>
-      </div>
+  <img src="LOGO ALERTA SEGURA.png" alt="Logo Alerta Segura" style="width:72px;height:72px;border-radius:50%" />
+  <span>Alerta<strong>Segura</strong></span>
+</div>
       <div class="nav-actions">
-        <a href="login.html" class="btn btn-ghost">Iniciar sesión</a>
+       <a href="login.html" class="btn btn-primary">Iniciar sesión</a>
         <a href="registro.html" class="btn btn-primary">Registrarse</a>
       </div>
     </nav>
@@ -398,7 +398,7 @@
 
      <h1 class="hero-title">
        Tu seguridad comienza <br>
-        con una alerta
+        con una ¡alerta!
     </h1>
 
         <p class="hero-desc">
@@ -407,16 +407,7 @@
           ante incidentes en tu distrito.
         </p>
 
-        <div class="hero-cta">
-          <a href="registro.html" class="btn btn-primary">
-            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-            Crear mi cuenta
-          </a>
-          <a href="login.html" class="btn btn-ghost">
-            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
-            Ya tengo cuenta
-          </a>
-        </div>
+        
       </div>
     </div>
 
@@ -447,32 +438,44 @@
 
     <div class="features-grid">
       <div class="feature-card">
-        <div class="feature-icon">🗺️</div>
+        <div class="feature-icon">
+          <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="var(--red)" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+        </div>
         <h3 class="feature-title">Mapa en tiempo real</h3>
         <p class="feature-desc">Visualiza incidentes activos en tu distrito sobre un mapa interactivo con calles, parques y colegios.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">🚨</div>
+        <div class="feature-icon">
+          <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="var(--red)" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
         <h3 class="feature-title">Reporta incidentes</h3>
         <p class="feature-desc">Registra robos, asaltos, vandalismo u otros incidentes en segundos. La hora se captura automáticamente.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">🔔</div>
+        <div class="feature-icon">
+          <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="var(--red)" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path stroke-linecap="round" stroke-linejoin="round" d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        </div>
         <h3 class="feature-title">Alertas por zona</h3>
         <p class="feature-desc">Recibe notificaciones cuando haya actividad sospechosa cerca de tu hogar o lugares que frecuentas.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">📊</div>
+        <div class="feature-icon">
+          <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="var(--red)" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        </div>
         <h3 class="feature-title">Estadísticas del distrito</h3>
         <p class="feature-desc">Monitorea tendencias de seguridad: tipos de incidentes, zonas críticas e incidentes del mes.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">💬</div>
+        <div class="feature-icon">
+          <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="var(--red)" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        </div>
         <h3 class="feature-title">Comentarios vecinales</h3>
         <p class="feature-desc">Comparte observaciones con tu comunidad. Juntos construimos un historial de seguridad del barrio.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">📞</div>
+        <div class="feature-icon">
+          <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="var(--red)" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+        </div>
         <h3 class="feature-title">Botón de emergencia</h3>
         <p class="feature-desc">Acceso inmediato a Policía (105), SAMU (106), Bomberos (116) y Serenazgo de tu distrito.</p>
       </div>
@@ -531,7 +534,7 @@
 
   <!-- ══ FOOTER ══ -->
   <footer>
-    <p>© 2025 AlertaSegura — Plataforma de Seguridad Ciudadana, Perú.</p>
+    <p>© 2026 AlertaSegura — Plataforma de Seguridad Ciudadana, Perú.</p>
     <p>Desarrollado para proteger comunidades.</p>
   </footer>
 

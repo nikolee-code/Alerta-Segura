@@ -37,20 +37,21 @@ body.dark .alert-row:hover { background: #1A2535; }
 /* ── TOP BAR ── */
 .top-bar {
   grid-column: 1 / -1;
-  background: #fff;
+ background: #f8ecec;
   border-bottom: 1px solid var(--gray-100);
   display: flex;
   align-items: center;
   padding: 0 24px;
   gap: 16px;
   position: sticky; top: 0; z-index: 50;
+  box-shadow: 0 2px 8px rgba(0,0,0,.04);
   transition: background .3s, border-color .3s;
 }
 
 .top-logo {
   display: flex; align-items: center; gap: 8px;
   font-family: 'Syne', sans-serif; font-weight: 800;
-  font-size: 1rem; color: var(--text);
+  font-size: 1.3rem; color: var(--red);
   margin-right: auto;
   text-decoration: none;
 }
@@ -180,10 +181,10 @@ body.dark .alert-row:hover { background: #1A2535; }
 }
 
 .stat-card.red::before    { background: var(--red); }
-.stat-card.gold::before   { background: var(--gold); }
-.stat-card.blue::before   { background: #3B82F6; }
-.stat-card.green::before  { background: #22C55E; }
-.stat-card.purple::before { background: #8B5CF6; }
+.stat-card.gold::before   { background: var(--red); }
+.stat-card.blue::before   { background: var(--red); }
+.stat-card.green::before  { background: var(--red); }
+.stat-card.purple::before { background: var(--red); }
 
 .stat-icon {
   font-size: 1.4rem; margin-bottom: 12px;
